@@ -110,6 +110,22 @@ def sqrt(i):
 	#TODO: this
 	return (i^0.5)
 
+def newton_sqrt(val, est=0):
+	if not est:
+		est = val
+	#This comes from the result:
+		#val^0.5 = X
+		#X^2 - val = 0 = f(X)
+		#f'(X) = 2X
+		#E(n+1) = E(n) - f(E(n))/f'(E(n))
+		#est2	= est - (est^2 - val)/2*est
+		#		= 0.5(est + val / est)
+	est2 = (est + val / est) / 2
+	if abs(est - est2) < 10e-8:
+		return est2
+	else:
+		return newton_sqrt(val, est2)
+
 def solve_quad(polies):
 	#BUGCHECK: no entry for power 1
 	if not 1.0 in polies:
@@ -120,10 +136,14 @@ def solve_quad(polies):
 		print('{0:g}'.format(-polies[1] / 2 * polies[2]))
 	elif discrim > 0:
 		print("Discriminant is strictly positive, the two solutions are:")
-		print('{0:g}'.format((-polies[1] + sqrt(discrim)) / 2 * polies[2]))
-		print('{0:g}'.format((-polies[1] - sqrt(discrim)) / 2 * polies[2]))
+		print('{0:g}'.format((-polies[1] - newton_sqrt(discrim)) / (2 * polies[2])))
+		print('{0:g}'.format((-polies[1] + newton_sqrt(discrim)) / (2 * polies[2])))
 	elif discrim < 0:
 		print("Discriminant is strictly negative, the two solutions are:")
+		alpha = -polies[1] / 2 * polies[2]
+		beta = newton_sqrt(-discrim) / 2 * polies[2]
+		print('{0:g} + {1:g}i'.format(alpha, beta))
+		print('{0:g} - {1:g}i'.format(alpha, beta))
 		pass
 
 def solve_cube(polies):
