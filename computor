@@ -1,0 +1,228 @@
+#!/usr/bin/env python3
+import sys
+import re
+import argparse
+from functools import reduce
+from fractions import Fraction
+
+def	expr_to_parameter(expr, multiplier = 1):
+	#BONUS: input validation
+	if re.fullmatch(r'-?\d+(.\d+)?\*?(X(\^-?\d+(.\d+)?)?)?', expr) == None and \
+		re.fullmatch(r'-?\d*(.\d+)?\*?X(\^-?\d+(.\d+)?)?', expr) == None:
+		print("Error: Badly formatted polynomial:", expr)
+		exit(4)
+	coeff, x, power = expr.replace('*','').replace('^', '').partition('X')
+	#BONUS: natural coefficients
+	if sum(c.isdigit() for c in coeff) == 0:
+		if coeff == '-':
+			coeff = '-1'
+		else:
+			coeff = '1'
+	#BONUS: natural powers
+	if not len(x):
+		power = 0
+	elif not len(power):
+		power = 1
+	return (float(coeff) * multiplier, float(power))
+
+def parse_string(poly):
+	if poly.count('=') != 1:
+		print("Error: Badly formatted equation")
+		exit(3)
+	poly = poly.replace(' ', '').replace('-', '+-').replace('^+', '^')
+	left, dummy, right = poly.partition('=')
+	left = left.split('+')
+	right = right.split('+')
+	arr = []
+	for expr in left:
+		if len(expr):
+			arr.append(expr_to_parameter(expr, 1))
+	for expr in right:
+		if len(expr):
+			arr.append(expr_to_parameter(expr, -1))
+	return (arr)
+
+#TODO: rewrite as a lambda? How does that even work? What even is a lambda?
+def euclid_gcd_iter(a, b):
+	while b:
+		a, b = b, a % b
+	return (a)
+
+def fractionise(a):
+	# Yes, I know this is a mathematical library.
+	# It's a bonus, I'm tired, leave me alone
+	f = Fraction(a)
+
+	# I'm also aware that len(str(int)) is not optimised. I don't want to write
+	# math.log10(int)
+	if len(str(f.numerator)) + len(str(f.denominator)) > 6:
+		return a
+	return f
+
+
+def normalize_poly(arr):
+	d = {}
+	for poly in arr:
+		if poly[1] in d:
+			d[poly[1]] += poly[0]
+		else:
+			d[poly[1]] = poly[0]
+	#remove nullified items
+	for i, j in list(d.items()):
+		if not j: del d[i]
+	#BONUS: reduce elements
+	gcd = 0
+	if not 0 in d.keys() and len(d):
+		#NOTE: the reduce function is to "reduce" an iterable to a single value with a function
+			#NOT to mathemematically reduce the power
+			#it is NOT a mathematical function. euclid_gcd_iter() is a mathematical function
+		gcd = int(reduce(euclid_gcd_iter, d.keys()))
+		if (ft_abs(gcd) != 1):
+			print("Reducing the exponents by", gcd)
+			d2 = {}
+			for i in d.keys():
+				d2[i // gcd] = d[i]
+			d = d2
+	#BONUS: modify order so there is one X^0
+	smallest = min(d, default=0)
+	if smallest != 0:
+		print("Shifting the exponents by", int(-smallest))
+		d2 = {}
+		for i in d.keys():
+			d2[i - smallest] = d[i]
+		d = d2
+	if smallest != 0 or ft_abs(gcd) != 1:
+		print("The polynomial will have an additional solution of 0")
+	return d
+
+def print_poly(polies):
+	if not len(polies):
+		print('0 ', end='')
+	for i in sorted(polies):
+		if polies[i] < 0:
+			print('- ', end='')
+		elif polies[i] > 0 and i != min(polies, key=int):
+			print('+ ', end='')
+		if polies[i] == 1:
+			if i == 0:
+				print('1 ', end='')
+			elif i != 1:
+				print('X^{0:g} '.format(i), end='')
+			else:
+				print('X ', end='')
+		elif polies[i]:
+			print('{0:g} '.format(abs(polies[i])), end='')
+			if i:
+				print('* X', end='')
+				if i != 1:
+					print('^{0:g} '.format(i), end='')
+				else:
+					print(' ', end='')
+	print('= 0')
+
+def ft_abs(i):
+	if i >= 0:
+		return i
+	else:
+		return -i
+
+#NOTE: This comes from the result:
+	#val^0.5 = X
+	#X^2 - val = 0 = f(X)
+	#f'(X) = 2X
+	#E(n+1) = E(n) - f(E(n))/f'(E(n))
+	#est2	= est - (est^2 - val)/2*est
+	#		= (est + val / est) / 2
+def newton_sqrt(val):
+	if val < 0:
+		return None
+	est2 = val
+	est1 = 0
+	while ft_abs(est1 - est2):
+		est1 = est2
+		est2 = (est1 + val / est1) / 2
+	return est2
+
+def solve_quad(polies, explain):
+	#Case for missing 1.0 polynomial
+	if not 1.0 in polies:
+		polies[1] = 0
+	discrim = polies[1] * polies[1] - 4 * polies[2] * polies[0]
+	if not discrim:
+		print("Discriminant is zero, the solution is:")
+		print(fractionise(-polies[1] / 2 * polies[2]))
+	elif discrim > 0:
+		print("Discriminant is strictly positive, the two solutions are:")
+		print(fractionise(-polies[1] - newton_sqrt(discrim)) / (2 * polies[2]))
+		print(fractionise(-polies[1] + newton_sqrt(discrim)) / (2 * polies[2]))
+	elif discrim < 0:
+		print("Discriminant is strictly negative, the two solutions are:")
+		alpha = -polies[1] / (2 * polies[2])
+		beta = newton_sqrt(-discrim) / (2 * polies[2])
+		print(fractionise(alpha), '+', fractionise(beta), '* i')
+		print(fractionise(alpha), '-', fractionise(beta), '* i')
+	if explain:
+		print("\nExplanation:")
+		print_poly(polies)
+		print('a = {a}, b = {b}, c = {c}'.format(a=polies[2], b=polies[1], c=polies[0]))
+		print("Quadratic formula:")
+		print("X = (-b +- sqrt(b^2 - 4 * a * c)) / (2 * a)")
+		print("X = (-({b}) +- sqrt({b}^2 - 4 * {a} * {c})) / (2 * {a})".format(a=polies[2], b=polies[1], c=polies[0]))
+		if not discrim:
+			print("The square root is 0, so there is only one solution")
+			print("X = -b / (2 * a)")
+			print("X = (-({b}) / (2 * {a})".format(a=polies[2], b=polies[1], c=polies[0]))
+			print("X =", fractionise(-polies[1] / 2 * polies[2]))
+		elif discrim > 0:
+			print("The square root is positive, so there are two real solutions")
+			print("X = (-({b}) +- sqrt({d})) / (2 * {a})".format(a=polies[2], b=polies[1], c=polies[0], d=discrim))
+			print("X = (-({b}) + {d}) / (2 * {a}) and X = (-({b}) - {d}) / (2 * {a})".format(a=polies[2], b=polies[1], c=polies[0], d=fractionise(newton_sqrt(discrim))))
+			print("X =", fractionise(-polies[1] - newton_sqrt(discrim)) / (2 * polies[2]), "and X =", fractionise(-polies[1] + newton_sqrt(discrim)) / (2 * polies[2]))
+		else:
+			print("The square root is negative, so there are two complex solutions")
+			print("X = (-({b}) +- sqrt(-{d}) * i) / (2 * {a})".format(a=polies[2], b=polies[1], c=polies[0], d=discrim))
+			print("X = (-({b}) +- {d} * i) / (2 * {a})".format(a=polies[2], b=polies[1], c=polies[0], d=fractionise(newton_sqrt(-discrim))))
+			alpha = -polies[1] / (2 * polies[2])
+			beta = newton_sqrt(-discrim) / (2 * polies[2])
+			print("X =", fractionise(alpha), '+-', fractionise(beta), '* i')
+	
+
+def solve_poly(polies, explain):
+	degree = max(polies, default=0)
+	print('Polynomial degree: {0:g}'.format(degree))
+	for i in polies:
+		if not i.is_integer():
+			print("The polynomial has decimal powers, I can't solve.")
+			return
+	if degree == 0:
+		if not 0 in polies:
+			print("This polynomial has infinite solutions.")
+		else:
+			print("This polynomial has no solutions.")
+	elif degree == 1:
+		print("The solution is:")
+		print(fractionise(-polies[0]/polies[1]))
+		if explain:
+			print("Explanation:")
+			print_poly(polies)
+			print(polies[1], '* X =', -polies[0])
+			print('X =', -polies[0], '/', polies[1])
+			print('X =', fractionise(-polies[0]/polies[1]))
+	elif degree == 2:
+		solve_quad(polies, explain)
+	else:
+		print("The polynomial degree is stricly greater than 2, I can't solve.")
+
+def main():
+	parser = argparse.ArgumentParser(description='Solves polynomial equations')
+	parser.add_argument('polynomial', type=str, help='the polynomial to be solved')
+	parser.add_argument('--explain', action='store_true')
+	args = parser.parse_args()
+	polynomials = parse_string(args.polynomial)
+	polynomials = normalize_poly(polynomials)
+	print("Reduced form: ", end='')
+	print_poly(polynomials)
+	solve_poly(polynomials, args.explain)
+
+if __name__ == "__main__":
+	main()
