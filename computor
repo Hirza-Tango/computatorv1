@@ -48,14 +48,14 @@ def euclid_gcd_iter(a, b):
 		a, b = b, a % b
 	return (a)
 
-def fractionise(a):
+def fractionise(a, fractional):
 	# Yes, I know this is a mathematical library.
 	# It's a bonus, I'm tired, leave me alone
 	f = Fraction(a)
 
 	# I'm also aware that len(str(int)) is not optimised. I don't want to write
 	# math.log10(int)
-	if len(str(f.numerator)) + len(str(f.denominator)) > 6:
+	if len(str(f.numerator)) + len(str(f.denominator)) > 6 or not fractional:
 		return a
 	return f
 
@@ -138,29 +138,29 @@ def newton_sqrt(val):
 		return None
 	est2 = val
 	est1 = 0
-	while ft_abs(est1 - est2):
+	while ft_abs(est1 - est2) < 0.000001:
 		est1 = est2
 		est2 = (est1 + val / est1) / 2
 	return est2
 
-def solve_quad(polies, explain):
+def solve_quad(polies, explain, fractional):
 	#Case for missing 1.0 polynomial
 	if not 1.0 in polies:
 		polies[1] = 0
 	discrim = polies[1] * polies[1] - 4 * polies[2] * polies[0]
 	if not discrim:
 		print("Discriminant is zero, the solution is:")
-		print(fractionise(-polies[1] / 2 * polies[2]))
+		print(fractionise(-polies[1] / 2 * polies[2], fractional))
 	elif discrim > 0:
 		print("Discriminant is strictly positive, the two solutions are:")
-		print(fractionise(-polies[1] - newton_sqrt(discrim)) / (2 * polies[2]))
-		print(fractionise(-polies[1] + newton_sqrt(discrim)) / (2 * polies[2]))
+		print(fractionise((-polies[1] - newton_sqrt(discrim)) / (2 * polies[2]), fractional))
+		print(fractionise((-polies[1] + newton_sqrt(discrim)) / (2 * polies[2]), fractional))
 	elif discrim < 0:
 		print("Discriminant is strictly negative, the two solutions are:")
 		alpha = -polies[1] / (2 * polies[2])
 		beta = newton_sqrt(-discrim) / (2 * polies[2])
-		print(fractionise(alpha), '+', fractionise(beta), '* i')
-		print(fractionise(alpha), '-', fractionise(beta), '* i')
+		print(fractionise(alpha, fractional), '+', fractionise(beta, fractional), '* i')
+		print(fractionise(alpha, fractional), '-', fractionise(beta, fractional), '* i')
 	if explain:
 		print("\nExplanation:")
 		print_poly(polies)
@@ -172,22 +172,22 @@ def solve_quad(polies, explain):
 			print("The square root is 0, so there is only one solution")
 			print("X = -b / (2 * a)")
 			print("X = (-({b}) / (2 * {a})".format(a=polies[2], b=polies[1], c=polies[0]))
-			print("X =", fractionise(-polies[1] / 2 * polies[2]))
+			print("X =", fractionise(-polies[1] / 2 * polies[2], fractional))
 		elif discrim > 0:
 			print("The square root is positive, so there are two real solutions")
 			print("X = (-({b}) +- sqrt({d})) / (2 * {a})".format(a=polies[2], b=polies[1], c=polies[0], d=discrim))
 			print("X = (-({b}) + {d}) / (2 * {a}) and X = (-({b}) - {d}) / (2 * {a})".format(a=polies[2], b=polies[1], c=polies[0], d=fractionise(newton_sqrt(discrim))))
-			print("X =", fractionise(-polies[1] - newton_sqrt(discrim)) / (2 * polies[2]), "and X =", fractionise(-polies[1] + newton_sqrt(discrim)) / (2 * polies[2]))
+			print("X =", fractionise((-polies[1] - newton_sqrt(discrim)) / (2 * polies[2]), fractional), "and X =", fractionise((-polies[1] + newton_sqrt(discrim)) / (2 * polies[2]), fractional))
 		else:
 			print("The square root is negative, so there are two complex solutions")
 			print("X = (-({b}) +- sqrt(-{d}) * i) / (2 * {a})".format(a=polies[2], b=polies[1], c=polies[0], d=discrim))
-			print("X = (-({b}) +- {d} * i) / (2 * {a})".format(a=polies[2], b=polies[1], c=polies[0], d=fractionise(newton_sqrt(-discrim))))
+			print("X = (-({b}) +- {d} * i) / (2 * {a})".format(a=polies[2], b=polies[1], c=polies[0], d=fractionise(newton_sqrt(-discrim), fractional)))
 			alpha = -polies[1] / (2 * polies[2])
 			beta = newton_sqrt(-discrim) / (2 * polies[2])
-			print("X =", fractionise(alpha), '+-', fractionise(beta), '* i')
+			print("X =", fractionise(alpha, fractional), '+-', fractionise(beta, fractional), '* i')
 	
 
-def solve_poly(polies, explain):
+def solve_poly(polies, explain, fractional):
 	degree = max(polies, default=0)
 	print('Polynomial degree: {0:g}'.format(degree))
 	for i in polies:
@@ -201,28 +201,29 @@ def solve_poly(polies, explain):
 			print("This polynomial has no solutions.")
 	elif degree == 1:
 		print("The solution is:")
-		print(fractionise(-polies[0]/polies[1]))
+		print(fractionise(-polies[0]/polies[1], fractional))
 		if explain:
 			print("Explanation:")
 			print_poly(polies)
 			print(polies[1], '* X =', -polies[0])
 			print('X =', -polies[0], '/', polies[1])
-			print('X =', fractionise(-polies[0]/polies[1]))
+			print('X =', fractionise(-polies[0]/polies[1], fractional))
 	elif degree == 2:
-		solve_quad(polies, explain)
+		solve_quad(polies, explain, fractional)
 	else:
-		print("The polynomial degree is stricly greater than 2, I can't solve.")
+		print("The polynomial degree is strictly greater than 2, I can't solve.")
 
 def main():
 	parser = argparse.ArgumentParser(description='Solves polynomial equations')
 	parser.add_argument('polynomial', type=str, help='the polynomial to be solved')
 	parser.add_argument('--explain', action='store_true')
+	parser.add_argument('--fractional', action='store_true')
 	args = parser.parse_args()
 	polynomials = parse_string(args.polynomial)
 	polynomials = normalize_poly(polynomials)
 	print("Reduced form: ", end='')
 	print_poly(polynomials)
-	solve_poly(polynomials, args.explain)
+	solve_poly(polynomials, args.explain, args.fractional)
 
 if __name__ == "__main__":
 	main()
