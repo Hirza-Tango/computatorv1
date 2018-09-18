@@ -133,7 +133,7 @@ def ft_abs(i):
 	#E(n+1) = E(n) - f(E(n))/f'(E(n))
 	#est2	= est - (est^2 - val)/2*est
 	#		= (est + val / est) / 2
-def newton_sqrt(val):
+def newton_rhapson_sqrt(val):
 	if val < 0:
 		return None
 	est2 = val
@@ -153,12 +153,12 @@ def solve_quad(polies, explain, fractional):
 		print(fractionise(-polies[1] / 2 * polies[2], fractional))
 	elif discrim > 0:
 		print("Discriminant is strictly positive, the two solutions are:")
-		print(fractionise((-polies[1] - newton_sqrt(discrim)) / (2 * polies[2]), fractional))
-		print(fractionise((-polies[1] + newton_sqrt(discrim)) / (2 * polies[2]), fractional))
+		print(fractionise((-polies[1] - newton_rhapson_sqrt(discrim)) / (2 * polies[2]), fractional))
+		print(fractionise((-polies[1] + newton_rhapson_sqrt(discrim)) / (2 * polies[2]), fractional))
 	elif discrim < 0:
 		print("Discriminant is strictly negative, the two solutions are:")
 		alpha = -polies[1] / (2 * polies[2])
-		beta = newton_sqrt(-discrim) / (2 * polies[2])
+		beta = newton_rhapson_sqrt(-discrim) / (2 * polies[2])
 		print(fractionise(alpha, fractional), '+', fractionise(beta, fractional), '* i')
 		print(fractionise(alpha, fractional), '-', fractionise(beta, fractional), '* i')
 	if explain:
@@ -176,14 +176,14 @@ def solve_quad(polies, explain, fractional):
 		elif discrim > 0:
 			print("The square root is positive, so there are two real solutions")
 			print("X = (-({b}) +- sqrt({d})) / (2 * {a})".format(a=polies[2], b=polies[1], c=polies[0], d=discrim))
-			print("X = (-({b}) + {d}) / (2 * {a}) and X = (-({b}) - {d}) / (2 * {a})".format(a=polies[2], b=polies[1], c=polies[0], d=fractionise(newton_sqrt(discrim))))
-			print("X =", fractionise((-polies[1] - newton_sqrt(discrim)) / (2 * polies[2]), fractional), "and X =", fractionise((-polies[1] + newton_sqrt(discrim)) / (2 * polies[2]), fractional))
+			print("X = (-({b}) + {d}) / (2 * {a}) and X = (-({b}) - {d}) / (2 * {a})".format(a=polies[2], b=polies[1], c=polies[0], d=fractionise(newton_rhapson_sqrt(discrim))))
+			print("X =", fractionise((-polies[1] - newton_rhapson_sqrt(discrim)) / (2 * polies[2]), fractional), "and X =", fractionise((-polies[1] + newton_rhapson_sqrt(discrim)) / (2 * polies[2]), fractional))
 		else:
 			print("The square root is negative, so there are two complex solutions")
 			print("X = (-({b}) +- sqrt({d}) * i) / (2 * {a})".format(a=polies[2], b=polies[1], c=polies[0], d=discrim))
-			print("X = (-({b}) +- {d} * i) / (2 * {a})".format(a=polies[2], b=polies[1], c=polies[0], d=fractionise(newton_sqrt(-discrim), fractional)))
+			print("X = (-({b}) +- {d} * i) / (2 * {a})".format(a=polies[2], b=polies[1], c=polies[0], d=fractionise(newton_rhapson_sqrt(-discrim), fractional)))
 			alpha = -polies[1] / (2 * polies[2])
-			beta = newton_sqrt(-discrim) / (2 * polies[2])
+			beta = newton_rhapson_sqrt(-discrim) / (2 * polies[2])
 			print("X =", fractionise(alpha, fractional), '+-', fractionise(beta, fractional), '* i')
 	
 
