@@ -91,7 +91,7 @@ def normalize_poly(arr):
 		for i in d.keys():
 			d2[i - smallest] = d[i]
 		d = d2
-	if smallest != 0 or ft_abs(gcd) != 1:
+	if smallest != 0 or ft_abs(gcd) > 1:
 		print("The polynomial will have an additional solution of 0")
 	return d
 
@@ -180,7 +180,7 @@ def solve_quad(polies, explain, fractional):
 			print("X =", fractionise((-polies[1] - newton_sqrt(discrim)) / (2 * polies[2]), fractional), "and X =", fractionise((-polies[1] + newton_sqrt(discrim)) / (2 * polies[2]), fractional))
 		else:
 			print("The square root is negative, so there are two complex solutions")
-			print("X = (-({b}) +- sqrt(-{d}) * i) / (2 * {a})".format(a=polies[2], b=polies[1], c=polies[0], d=discrim))
+			print("X = (-({b}) +- sqrt({d}) * i) / (2 * {a})".format(a=polies[2], b=polies[1], c=polies[0], d=discrim))
 			print("X = (-({b}) +- {d} * i) / (2 * {a})".format(a=polies[2], b=polies[1], c=polies[0], d=fractionise(newton_sqrt(-discrim), fractional)))
 			alpha = -polies[1] / (2 * polies[2])
 			beta = newton_sqrt(-discrim) / (2 * polies[2])
